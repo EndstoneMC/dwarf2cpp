@@ -1,4 +1,4 @@
-{%- set alignas = " alignas({})" | format(obj.alignment) if obj.alignment else "" -%}
+{%- set alignas = " alignas({})".format(obj.alignment) if obj.alignment else "" -%}
 {%- if obj.value is none or obj.value is string -%}
   using {{ obj.name }}{{ alignas }} = {{ obj.value if obj.value else "void" }}
 {%- else -%}
