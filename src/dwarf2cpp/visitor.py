@@ -397,6 +397,11 @@ class Visitor:
             printer.append_unqualified_name(spec)
             name = str(printer)
 
+            function_name = name.split("<", maxsplit=1)[0]
+            if function_name.endswith("class ::operator()"):
+                # lambda function definitions - skip them
+                return
+
             function = Function(name=name, returns=declaration.returns, is_const=declaration.is_const)
         else:
             if die.find("DW_AT_artificial") is not None:
