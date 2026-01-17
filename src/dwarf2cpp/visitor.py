@@ -355,7 +355,11 @@ class Visitor:
             member.is_static = True
 
     def visit_subprogram(self, die: DWARFDie) -> None:
-        if not die.find("DW_AT_decl_file") or not die.find("DW_AT_decl_line") or not die.short_name:
+        if not die.find("DW_AT_decl_file") or not die.find("DW_AT_decl_line"):
+            if not die.find("DW_AT_specification"):
+                return
+
+        if not die.short_name:
             return
 
         if die.parent and die.parent.tag in {
