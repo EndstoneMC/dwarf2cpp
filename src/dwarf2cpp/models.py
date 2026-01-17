@@ -12,7 +12,7 @@ class Object:
 
     name: str
     parent: "Namespace | Object | None" = field(default=None, compare=False)
-    is_implicit: bool = False
+    is_hidden: bool = False  # should this object be hidden from the final result?
     is_declaration: bool = False
     access: AccessAttribute | None = None
     template: "Template | None" = field(default=None, compare=False)

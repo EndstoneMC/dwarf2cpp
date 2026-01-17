@@ -173,6 +173,9 @@ class Visitor:
 
                 self.visit(child)
                 if obj := self._get(child):
+                    if obj.is_hidden:
+                        continue
+
                     if template := obj.template:
                         if template := self._register_template(decl_file, decl_line, template):
                             self._add(decl_file, decl_line, template)
@@ -244,6 +247,9 @@ class Visitor:
                 if member := self._get(child):
                     assert member.parent is None or member.parent.name == namespace.name, "Already has a parent"
                     member.parent = namespace
+                    if member.is_hidden:
+                        continue
+
                     if template := member.template:
                         template.parent = namespace
                         if template := self._register_template(decl_file, decl_line, template):
@@ -358,6 +364,9 @@ class Visitor:
         if not die.find("DW_AT_decl_file") or not die.find("DW_AT_decl_line"):
             if not die.find("DW_AT_specification"):
                 return
+            is_hidden = True  # hide from the final output if it's a forward declaration
+        else:
+            is_hidden = False
 
         if not die.short_name:
             return
@@ -402,7 +411,12 @@ class Visitor:
                 # lambda function definitions - skip them
                 return
 
-            function = Function(name=name, returns=declaration.returns, is_const=declaration.is_const)
+            function = Function(
+                name=name,
+                returns=declaration.returns,
+                is_const=declaration.is_const,
+                is_hidden=is_hidden,
+            )
         else:
             if die.find("DW_AT_artificial") is not None:
                 return
@@ -422,7 +436,12 @@ class Visitor:
                         returns = None
 
             # for member function, we set is_static to True by default, unless we find the `this` pointer later
-            function = Function(name=name, returns=returns, is_static=is_member_function)
+            function = Function(
+                name=name,
+                returns=returns,
+                is_static=is_member_function,
+                is_hidden=is_hidden,
+            )
 
         for attribute in die.attributes:
             if attribute.name in {
