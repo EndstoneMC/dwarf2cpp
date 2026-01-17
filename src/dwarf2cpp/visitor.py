@@ -62,7 +62,6 @@ class Visitor:
         self._files: dict[str, dict[int, list[Object]]] = defaultdict(lambda: defaultdict(list))
         self._base_dir = base_dir
         self._objects = {}
-        self._param_names: dict[str, list[str]] = {}
         self._functions: dict[str, list[Function]] = defaultdict(list)
         self._templates: dict[str | int, dict[int, list[Template]]] = defaultdict(lambda: defaultdict(list))
         self._types = {}
@@ -103,8 +102,19 @@ class Visitor:
             pbar.set_description_str(f"Visiting compile unit {rel_path}")
             self.visit(cu_die)
 
-        for key, param_names in self._param_names.items():
-            functions = self._functions[key]
+        for key, functions in self._functions.items():
+            # collect param names
+            param_names = []
+            for function in functions:
+                if not param_names:
+                    param_names = [param.name for param in function.parameters]
+                else:
+                    assert len(param_names) == len(function.parameters), "Parameter count mismatch"
+                    for i, param in enumerate(function.parameters):
+                        if param_names[i] is None and param.name is not None:
+                            param_names[i] = param.name
+
+            # sync param names
             for function in functions:
                 for i, param in enumerate(function.parameters):
                     if param.name is None:
@@ -555,7 +565,7 @@ class Visitor:
                 case _:
                     raise ValueError(f"Unhandled child tag {child.tag}")
 
-        # sync parameter names from definition to declaration
+        # group functions to sync parameter names
         key = None
         if die.linkage_name:
             # c++ functions with external linkage
@@ -571,15 +581,6 @@ class Visitor:
             # declaration to the function map
             if spec and not spec.linkage_name:
                 self._functions[key].append(self._get(spec))
-
-            if key not in self._param_names:
-                self._param_names[key] = [p.name for p in function.parameters]
-            else:
-                param_names = self._param_names[key]
-                assert len(param_names) == len(function.parameters), "Parameter count mismatch"
-                for i, param in enumerate(function.parameters):
-                    if param_names[i] is None and param.name is not None:
-                        param_names[i] = param.name
 
         if template_params:
             function.template = Template(name="")  # without declaration as there is no trivial way to infer that
