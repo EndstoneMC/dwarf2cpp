@@ -782,7 +782,9 @@ class Visitor:
 
         if spec := die.find("DW_AT_specification"):
             spec = spec.as_referenced_die()
-            assert spec.tag == "DW_TAG_member", "Expected DW_TAG_member"
+            assert spec.tag in {"DW_TAG_member", "DW_TAG_variable"}, (
+                f"Expected DW_TAG_member or DW_TAG_variable, got {spec.tag}"
+            )
             return
 
         variable = Attribute(name=die.short_name)
@@ -918,6 +920,7 @@ class Visitor:
                 "DW_TAG_union_type",
                 "DW_TAG_structure_type",
                 "DW_TAG_member",
+                "DW_TAG_variable",
                 "DW_TAG_subprogram",
                 "DW_TAG_imported_module",
                 "DW_TAG_imported_declaration",
@@ -936,6 +939,10 @@ class Visitor:
 
                 member = self._get(child)
                 member.parent = struct
+
+                # DW_TAG_variable as a child of a class/struct is a static data member
+                if child.tag == "DW_TAG_variable":
+                    member.is_static = True
 
                 # If no accessibility attribute is present, private access is assumed for members of a
                 # class and public access is assumed for members of a structure, union, or interface
