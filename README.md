@@ -6,7 +6,7 @@
 
 Generate C++ headers from DWARF Debugging Information Format (DWARF).
 
-> \[!WARNING]
+> [!WARNING]
 > This tool requires binaries that contain **DWARF debug information** in order to generate headers.
 > Make sure your input binary includes DWARF debug info, which is often not publicly available in proprietary software.
 
@@ -34,19 +34,15 @@ python -m dwarf2cpp
 
 ### Prebuilt Wheels
 
-For convenience, **prebuilt wheels** are available from the GitHub Actions pages of this repository.
-These wheels include the required C++ extension, so you do not need to have LLVM or a compiler toolchain installed
-locally.
+Prebuilt wheels are attached to each [GitHub Release](https://github.com/EndstoneMC/dwarf2cpp/releases).
+These include the compiled C++ extension, so you do not need LLVM or a compiler toolchain.
 
-1. Visit the **Actions** tab on GitHub.
-2. Select the latest successful build for your platform (Windows, Linux, or macOS).
-3. Download the wheel artifact and install it with:
+1. Download the `.whl` for your platform from the latest release
+2. Install it:
 
    ```
    pip install dwarf2cpp-<version>-<platform>.whl
    ```
-
-This is the recommended option if you only want to use `dwarf2cpp` without setting up a compiler or LLVM.
 
 ## Usage
 
@@ -112,10 +108,20 @@ This project makes use of the following open-source technologies:
 > Do not redistribute or publish headers generated from proprietary binaries without proper rights.
 > Respect the terms of service and licensing agreements of any binaries you analyse.
 
+## Releasing
+
+1. Add changes under `## [Unreleased]` in `CHANGELOG.md`
+2. Go to **Actions > Release > Run workflow**
+3. Enter the version (e.g. `0.2.0`) and run
+
+The workflow validates the version, updates pyproject.toml and CHANGELOG.md, creates a git tag
+and GitHub release, builds wheels on all platforms, and attaches them to the release.
+
+Use **dry run** to preview without making changes.
+
 ## Contributing
 
-Contributions are welcome!
-If you encounter issues or have suggestions for improvements, please open an issue or a pull request on GitHub.
+Contributions are welcome. Open an issue or pull request on GitHub.
 
 ## License
 
