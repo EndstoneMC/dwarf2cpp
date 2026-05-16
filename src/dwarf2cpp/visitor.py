@@ -216,6 +216,9 @@ class Visitor:
         namespace = Namespace(name=die.short_name)
 
         for attribute in die.attributes:
+            if attribute.name in {"DW_AT_decl_file", "DW_AT_decl_line"}:
+                continue
+
             match attribute.name:
                 case "DW_AT_name":
                     pass
