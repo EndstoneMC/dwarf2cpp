@@ -12,6 +12,9 @@ wheels/
 # IDEA
 .idea/
 
+# Claude Code
+.claude/
+
 # CMake Files
 CMakeUserPresets.json
 
