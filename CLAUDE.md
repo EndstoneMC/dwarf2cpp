@@ -50,7 +50,7 @@ Binary File → DWARFContext (C++ pybind11) → Visitor (Python) → Models → 
 - **Python build**: scikit-build-core with Conan
 - **C++ build**: CMake 3.15+
 - **Dependencies**: LLVM 19.1.7, pybind11 3.0.1, libxml2 (via Conan)
-- **Compiler settings**: C++17 required (MSVC 193 / GCC 11 / Apple Clang 13)
+- **Compiler settings**: C++17 required (MSVC 194 / GCC 11 / Apple Clang 13)
 
 ## Code Style
 

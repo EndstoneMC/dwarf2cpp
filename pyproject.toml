@@ -18,7 +18,7 @@ wheel.exclude = ["*.cpp"]
 
 [[tool.scikit-build-core-conan.overrides]]
 if.platform-system = "win32"
-settings = ["compiler.cppstd=17", "compiler.version=193"]
+settings = ["compiler.cppstd=17", "compiler.version=194"]
 
 [[tool.scikit-build-core-conan.overrides]]
 if.platform-system = "linux"
