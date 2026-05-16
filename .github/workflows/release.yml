@@ -123,10 +123,19 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.version }}
 
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt') }}
+          restore-keys: |
+            conan-${{ matrix.os }}-
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_SKIP: "*-win32 *-manylinux_i686"
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.conan2:/root/.conan2"
 
       - name: Upload wheels artifact
         uses: actions/upload-artifact@v7
