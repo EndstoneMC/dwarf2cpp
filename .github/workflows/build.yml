@@ -34,6 +34,12 @@ jobs:
           # Linux wheels build inside a container — mount the host Conan cache in
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.conan2:/root/.conan2"
 
+      # The Linux container writes the Conan cache as root; reclaim ownership so
+      # the actions/cache post-step (running as the runner user) can save it.
+      - name: Reclaim Conan cache ownership
+        if: always() && runner.os == 'Linux'
+        run: sudo chown -R "$(id -u):$(id -g)" ~/.conan2
+
       - uses: actions/upload-artifact@v7
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
