@@ -12,9 +12,21 @@ Generate C++ headers from DWARF Debugging Information Format (DWARF).
 
 ## Installation
 
+The easiest way to get started is the prebuilt package. No C++ toolchain or LLVM required.
+
+```
+uvx dwarf2cpp
+```
+
+or with pip
+```
+pip install dwarf2cpp
+```
+
 ### Build from Source
 
-Since dwarf2cpp uses **pybind11** to access LLVM's DWARF DebugInfo module from Python, you need a working C++ toolchain to build it:
+Building from source is only needed when no prebuilt wheel is available for your platform.
+Since dwarf2cpp uses **pybind11** to access LLVM's DWARF DebugInfo module from Python, it requires a working C++ toolchain:
 
 * On Windows: **MSVC (Visual Studio Build Tools)**
 * On Linux: **GCC (g++)**
@@ -26,28 +38,10 @@ cd dwarf2cpp
 pip install .
 ```
 
-After installation, run the tool with:
-
-```
-python -m dwarf2cpp
-```
-
-### Prebuilt Wheels
-
-Prebuilt wheels are attached to each [GitHub Release](https://github.com/EndstoneMC/dwarf2cpp/releases).
-These include the compiled C++ extension, so you do not need LLVM or a compiler toolchain.
-
-1. Download the `.whl` for your platform from the latest release
-2. Install it:
-
-   ```
-   pip install dwarf2cpp-<version>-<platform>.whl
-   ```
-
 ## Usage
 
 ```
-Usage: python -m dwarf2cpp [OPTIONS] PATH
+Usage: dwarf2cpp [OPTIONS] PATH
 
 Options:
   --base-dir TEXT         Base directory used during compilation.  [required]
@@ -66,13 +60,13 @@ The `PATH` argument must point to a binary containing DWARF debug information.
 ### Extract from `libminecraftpe.so`
 
 ```
-python -m dwarf2cpp path/to/libminecraftpe.so --base-dir D:/a/_work/1/s
+dwarf2cpp path/to/libminecraftpe.so --base-dir D:/a/_work/1/s
 ```
 
 ### Extract from `bedrock_server` (Linux)
 
 ```
-python -m dwarf2cpp path/to/bedrock_server --base-dir /mnt/vss/_work/1/s
+dwarf2cpp path/to/bedrock_server --base-dir /mnt/vss/_work/1/s
 ```
 
 ## Motivation / Purpose
@@ -111,11 +105,8 @@ This project makes use of the following open-source technologies:
 ## Releasing
 
 1. Add changes under `## [Unreleased]` in `CHANGELOG.md`
-2. Go to **Actions > Release > Run workflow**
-3. Enter the version (e.g. `0.2.0`) and run
-
-The workflow validates the version, updates pyproject.toml and CHANGELOG.md, creates a git tag
-and GitHub release, builds wheels on all platforms, and attaches them to the release.
+2. Bump `version` in `pyproject.toml`, then commit and push to `main`
+3. Go to **Actions > Release > Run workflow**
 
 Use **dry run** to preview without making changes.
 
