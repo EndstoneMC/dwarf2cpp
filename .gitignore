@@ -9,6 +9,12 @@ wheels/
 # Virtual environments
 .venv
 
+# Project-local Conan home (.conanrc points here). Track only remotes.json so the
+# endstone remote is versioned; ignore the cache, db, machine-specific profiles, and
+# any stored auth token.
+.conan2/*
+!.conan2/remotes.json
+
 # IDEA
 .idea/
 
