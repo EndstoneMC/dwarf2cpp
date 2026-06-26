@@ -6,12 +6,14 @@
 #include <llvm/DebugInfo/DWARF/DWARFTypePrinter.h>
 #include <llvm/DebugInfo/DWARF/DWARFTypeUnit.h>
 #include <llvm/Demangle/Demangle.h>
-#include <pybind11/native_enum.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
+namespace nb = nanobind;
 
 namespace {
 std::string ToString(llvm::dwarf::Attribute attr) {
@@ -174,90 +176,87 @@ private:
     llvm::DWARFTypePrinter<llvm::DWARFDie> printer;
 };
 
-PYBIND11_MODULE(_dwarf, m) {
-    py::native_enum<llvm::dwarf::AccessAttribute>(m, "AccessAttribute", "enum.IntEnum")
+NB_MODULE(_dwarf, m) {
+    nb::enum_<llvm::dwarf::AccessAttribute>(m, "AccessAttribute", nb::is_arithmetic())
         .value("PUBLIC", llvm::dwarf::DW_ACCESS_public)
         .value("PROTECTED", llvm::dwarf::DW_ACCESS_protected)
-        .value("PRIVATE", llvm::dwarf::DW_ACCESS_private)
-        .finalize();
+        .value("PRIVATE", llvm::dwarf::DW_ACCESS_private);
 
-    py::native_enum<llvm::dwarf::VirtualityAttribute>(m, "VirtualityAttribute", "enum.IntEnum")
+    nb::enum_<llvm::dwarf::VirtualityAttribute>(m, "VirtualityAttribute", nb::is_arithmetic())
         .value("NONE", llvm::dwarf::DW_VIRTUALITY_none)
         .value("VIRTUAL", llvm::dwarf::DW_VIRTUALITY_virtual)
-        .value("PURE_VIRTUAL", llvm::dwarf::DW_VIRTUALITY_pure_virtual)
-        .finalize();
+        .value("PURE_VIRTUAL", llvm::dwarf::DW_VIRTUALITY_pure_virtual);
 
-    py::native_enum<llvm::dwarf::InlineAttribute>(m, "InlineAttribute", "enum.IntEnum")
+    nb::enum_<llvm::dwarf::InlineAttribute>(m, "InlineAttribute", nb::is_arithmetic())
         .value("NOT_INLINED", llvm::dwarf::DW_INL_not_inlined)
         .value("INLINED", llvm::dwarf::DW_INL_inlined)
         .value("DECLARED_NOT_INLINED", llvm::dwarf::DW_INL_declared_not_inlined)
-        .value("DECLARED_INLINED", llvm::dwarf::DW_INL_declared_inlined)
-        .finalize();
+        .value("DECLARED_INLINED", llvm::dwarf::DW_INL_declared_inlined);
 
-    py::class_<PyDWARFContext>(m, "DWARFContext")
-        .def(py::init<const std::string &>(), py::arg("path"))
-        .def_property_readonly("info_section_units",
-                               &PyDWARFContext::info_section_units,
-                               py::return_value_policy::reference_internal)
-        .def_property_readonly("types_section_units",
-                               &PyDWARFContext::types_section_units,
-                               py::return_value_policy::reference_internal)
-        .def_property_readonly("compile_units",
-                               &PyDWARFContext::compile_units,
-                               py::return_value_policy::reference_internal)
-        .def_property_readonly("num_compile_units", &PyDWARFContext::getNumCompileUnits)
-        .def_property_readonly("num_type_units", &PyDWARFContext::getNumTypeUnits)
-        .def_property_readonly("num_dwo_compile_units", &PyDWARFContext::getNumDWOCompileUnits)
-        .def_property_readonly("num_dwo_type_units", &PyDWARFContext::getNumDWOTypeUnits)
-        .def_property_readonly("max_version", &PyDWARFContext::getMaxVersion)
-        .def_property_readonly("max_dwo_version", &PyDWARFContext::getMaxDWOVersion)
-        .def_property_readonly("is_little_endian", &PyDWARFContext::isLittleEndian)
-        .def_property_readonly("cu_addr_size", &PyDWARFContext::getCUAddrSize);
+    nb::class_<PyDWARFContext>(m, "DWARFContext")
+        .def(nb::init<const std::string &>(), nb::arg("path"))
+        .def_prop_ro("info_section_units",
+                     &PyDWARFContext::info_section_units,
+                     nb::rv_policy::reference_internal)
+        .def_prop_ro("types_section_units",
+                     &PyDWARFContext::types_section_units,
+                     nb::rv_policy::reference_internal)
+        .def_prop_ro("compile_units",
+                     &PyDWARFContext::compile_units,
+                     nb::rv_policy::reference_internal)
+        .def_prop_ro("num_compile_units", &PyDWARFContext::getNumCompileUnits)
+        .def_prop_ro("num_type_units", &PyDWARFContext::getNumTypeUnits)
+        .def_prop_ro("num_dwo_compile_units", &PyDWARFContext::getNumDWOCompileUnits)
+        .def_prop_ro("num_dwo_type_units", &PyDWARFContext::getNumDWOTypeUnits)
+        .def_prop_ro("max_version", &PyDWARFContext::getMaxVersion)
+        .def_prop_ro("max_dwo_version", &PyDWARFContext::getMaxDWOVersion)
+        .def_prop_ro("is_little_endian", &PyDWARFContext::isLittleEndian)
+        .def_prop_ro("cu_addr_size", &PyDWARFContext::getCUAddrSize);
 
-    py::class_<llvm::DWARFUnit>(m, "DWARFUnit")
-        .def_property_readonly("offset", &llvm::DWARFUnit::getOffset)
-        .def_property_readonly("length", &llvm::DWARFUnit::getLength)
-        .def_property_readonly("is_type_unit", &llvm::DWARFUnit::isTypeUnit)
-        .def_property_readonly("unit_die",
-                               [](llvm::DWARFUnit &self) -> std::optional<llvm::DWARFDie> {
-                                   if (auto die = self.getUnitDIE(false); die.isValid()) {
-                                       return die;
-                                   }
-                                   return std::nullopt;
-                               })
-        .def_property_readonly("compilation_dir", &llvm::DWARFUnit::getCompilationDir);
+    nb::class_<llvm::DWARFUnit>(m, "DWARFUnit")
+        .def_prop_ro("offset", &llvm::DWARFUnit::getOffset)
+        .def_prop_ro("length", &llvm::DWARFUnit::getLength)
+        .def_prop_ro("is_type_unit", &llvm::DWARFUnit::isTypeUnit)
+        .def_prop_ro("unit_die",
+                     [](llvm::DWARFUnit &self) -> std::optional<llvm::DWARFDie> {
+                         if (auto die = self.getUnitDIE(false); die.isValid()) {
+                             return die;
+                         }
+                         return std::nullopt;
+                     })
+        .def_prop_ro("compilation_dir", &llvm::DWARFUnit::getCompilationDir);
 
-    py::class_<llvm::DWARFDie>(m, "DWARFDie")
-        .def_property_readonly("unit", &llvm::DWARFDie::getDwarfUnit)
-        .def_property_readonly("offset", &llvm::DWARFDie::getOffset)
-        .def_property_readonly(
+    nb::class_<llvm::DWARFDie>(m, "DWARFDie")
+        .def_prop_ro("unit", &llvm::DWARFDie::getDwarfUnit)
+        .def_prop_ro("offset", &llvm::DWARFDie::getOffset)
+        .def_prop_ro(
             "tag", [](const llvm::DWARFDie &self) { return TagString(self.getTag()).str(); })
-        .def_property_readonly("parent",
-                               [](const llvm::DWARFDie &self) -> std::optional<llvm::DWARFDie> {
-                                   if (auto parent = self.getParent(); parent.isValid()) {
-                                       return parent;
-                                   }
-                                   return std::nullopt;
-                               })
-        .def_property_readonly("short_name",
-                               [](const llvm::DWARFDie &self) {
-                                   return llvm::dwarf::toString(
-                                       findRecursively(self, llvm::dwarf::DW_AT_name), nullptr);
-                               })
-        .def_property_readonly("linkage_name",
-                               [](const llvm::DWARFDie &self) {
-                                   return llvm::dwarf::toString(
-                                       findRecursively(self,
-                                                       {llvm::dwarf::DW_AT_MIPS_linkage_name,
-                                                        llvm::dwarf::DW_AT_linkage_name}),
-                                       nullptr);
-                               })
-        .def_property_readonly("decl_line",
-                               [](const llvm::DWARFDie &self) {
-                                   return llvm::dwarf::toUnsigned(
-                                       findRecursively(self, llvm::dwarf::DW_AT_decl_line), 0);
-                               })
-        .def_property_readonly(
+        .def_prop_ro("parent",
+                     [](const llvm::DWARFDie &self) -> std::optional<llvm::DWARFDie> {
+                         if (auto parent = self.getParent(); parent.isValid()) {
+                             return parent;
+                         }
+                         return std::nullopt;
+                     })
+        .def_prop_ro("short_name",
+                     [](const llvm::DWARFDie &self) {
+                         return llvm::dwarf::toString(
+                             findRecursively(self, llvm::dwarf::DW_AT_name), nullptr);
+                     })
+        .def_prop_ro("linkage_name",
+                     [](const llvm::DWARFDie &self) {
+                         return llvm::dwarf::toString(
+                             findRecursively(self,
+                                             {llvm::dwarf::DW_AT_MIPS_linkage_name,
+                                              llvm::dwarf::DW_AT_linkage_name}),
+                             nullptr);
+                     })
+        .def_prop_ro("decl_line",
+                     [](const llvm::DWARFDie &self) {
+                         return llvm::dwarf::toUnsigned(
+                             findRecursively(self, llvm::dwarf::DW_AT_decl_line), 0);
+                     })
+        .def_prop_ro(
             "decl_file",
             [](const llvm::DWARFDie &self) -> std::optional<std::string> {
                 if (auto form = findRecursively(self, llvm::dwarf::DW_AT_decl_file))
@@ -265,24 +264,24 @@ PYBIND11_MODULE(_dwarf, m) {
                         llvm::DILineInfoSpecifier::FileLineInfoKind::AbsoluteFilePath);
                 return std::nullopt;
             })
-        .def_property_readonly("attributes",
-                               [](const llvm::DWARFDie &self) {
-                                   std::vector<llvm::DWARFAttribute> attrs;
-                                   for (const auto &attr : self.attributes()) {
-                                       attrs.emplace_back(attr);
-                                   }
-                                   return attrs;
-                               })
-        .def_property_readonly("children",
-                               [](const llvm::DWARFDie &self) {
-                                   std::vector<llvm::DWARFDie> children;
-                                   for (const auto &child : self.children()) {
-                                       if (child.isValid()) {
-                                           children.emplace_back(child);
-                                       }
-                                   }
-                                   return children;
-                               })
+        .def_prop_ro("attributes",
+                     [](const llvm::DWARFDie &self) {
+                         std::vector<llvm::DWARFAttribute> attrs;
+                         for (const auto &attr : self.attributes()) {
+                             attrs.emplace_back(attr);
+                         }
+                         return attrs;
+                     })
+        .def_prop_ro("children",
+                     [](const llvm::DWARFDie &self) {
+                         std::vector<llvm::DWARFDie> children;
+                         for (const auto &child : self.children()) {
+                             if (child.isValid()) {
+                                 children.emplace_back(child);
+                             }
+                         }
+                         return children;
+                     })
         .def("dump",
              [](const llvm::DWARFDie &self) {
                  std::string result;
@@ -304,20 +303,20 @@ PYBIND11_MODULE(_dwarf, m) {
                  return die;
              })
         .def("__hash__", &llvm::DWARFDie::getOffset)
-        .def(py::self == py::self);
+        .def(nb::self == nb::self);
 
-    py::class_<llvm::DWARFAttribute>(m, "DWARFAttribute")
-        .def_readonly("offset", &llvm::DWARFAttribute::Offset)
-        .def_readonly("byte_size", &llvm::DWARFAttribute::ByteSize)
-        .def_property_readonly(
-            "name", [](const llvm::DWARFAttribute &self) { return ToString(self.Attr); })
-        .def_readonly("value", &llvm::DWARFAttribute::Value);
+    nb::class_<llvm::DWARFAttribute>(m, "DWARFAttribute")
+        .def_ro("offset", &llvm::DWARFAttribute::Offset)
+        .def_ro("byte_size", &llvm::DWARFAttribute::ByteSize)
+        .def_prop_ro("name",
+                     [](const llvm::DWARFAttribute &self) { return ToString(self.Attr); })
+        .def_ro("value", &llvm::DWARFAttribute::Value);
 
-    py::class_<llvm::DWARFFormValue>(m, "DWARFFormValue")
-        .def_property_readonly("form",
-                               [](const llvm::DWARFFormValue &self) {
-                                   return FormEncodingString(self.getForm()).str();
-                               })
+    nb::class_<llvm::DWARFFormValue>(m, "DWARFFormValue")
+        .def_prop_ro("form",
+                     [](const llvm::DWARFFormValue &self) {
+                         return FormEncodingString(self.getForm()).str();
+                     })
         .def("as_referenced_die",
              [](const llvm::DWARFFormValue &self) -> std::optional<llvm::DWARFDie> {
                  llvm::DWARFDie result;
@@ -347,20 +346,21 @@ PYBIND11_MODULE(_dwarf, m) {
                  if (e) {
                      return e.get();
                  }
-                 throw py::value_error(toString(e.takeError()));
+                 std::string message = toString(e.takeError());
+                 throw nb::value_error(message.c_str());
              })
-        .def("as_constant", [](const llvm::DWARFFormValue &self) -> py::int_ {
+        .def("as_constant", [](const llvm::DWARFFormValue &self) -> nb::int_ {
             if (auto s = self.getAsSignedConstant(); s) {
-                return s.value();
+                return nb::int_(s.value());
             }
             if (auto u = self.getAsUnsignedConstant(); u) {
-                return u.value();
+                return nb::int_(u.value());
             }
-            throw py::value_error("Invalid constant value");
+            throw nb::value_error("Invalid constant value");
         });
 
-    py::class_<PyDWARFTypePrinter>(m, "DWARFTypePrinter")
-        .def(py::init())
+    nb::class_<PyDWARFTypePrinter>(m, "DWARFTypePrinter")
+        .def(nb::init())
         .def("append_qualified_name", &PyDWARFTypePrinter::appendQualifiedName)
         .def("append_qualified_name_before", &PyDWARFTypePrinter::appendQualifiedNameBefore)
         .def("append_unqualified_name", &PyDWARFTypePrinter::appendUnqualifiedName)

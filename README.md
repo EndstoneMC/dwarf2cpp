@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/EndstoneMC/dwarf2cpp/actions/workflows/build.yml/badge.svg)](https://github.com/EndstoneMC/dwarf2cpp/actions)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)
 
 Generate C++ headers from DWARF Debugging Information Format (DWARF).
 
@@ -26,7 +26,7 @@ pip install dwarf2cpp
 ### Build from Source
 
 Building from source is only needed when no prebuilt wheel is available for your platform.
-Since dwarf2cpp uses **pybind11** to access LLVM's DWARF DebugInfo module from Python, it requires a working C++ toolchain:
+Since dwarf2cpp uses **nanobind** to access LLVM's DWARF DebugInfo module from Python, it requires a working C++ toolchain:
 
 * On Windows: **MSVC (Visual Studio Build Tools)**
 * On Linux: **GCC (g++)**
@@ -89,7 +89,7 @@ Typical use cases include:
 This project makes use of the following open-source technologies:
 
 * [LLVM Project](https://llvm.org/) - DWARF DebugInfo parser.
-* [pybind11](https://pybind11.readthedocs.io/) - C++/Python bindings.
+* [nanobind](https://nanobind.readthedocs.io/) - C++/Python bindings.
 * [click](https://click.palletsprojects.com/) - Command-line interface framework.
 
 ## Security / Legal Disclaimer

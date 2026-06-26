@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-dwarf2cpp generates C++ headers from DWARF debug information in compiled binaries. It uses pybind11 C++ bindings to access LLVM's DWARF DebugInfo module and reconstructs source headers from debug symbols.
+dwarf2cpp generates C++ headers from DWARF debug information in compiled binaries. It uses nanobind C++ bindings to access LLVM's DWARF DebugInfo module and reconstructs source headers from debug symbols.
 
 ## Build Commands
 
@@ -22,19 +22,19 @@ ruff format src/
 ruff check src/
 
 # Format C++ code
-clang-format -i src/dwarf2cpp/*.cpp src/dwarf2cpp/*.h
+clang-format -i src/dwarf2cpp/_dwarf.cpp
 ```
 
 ## Architecture
 
 ### Data Flow
 ```
-Binary File → DWARFContext (C++ pybind11) → Visitor (Python) → Models → Jinja2 Templates → Post-process → .h files
+Binary File → DWARFContext (C++ nanobind) → Visitor (Python) → Models → Jinja2 Templates → Post-process → .h files
 ```
 
 ### Key Modules
 
-- **`src/dwarf2cpp/_dwarf.cpp`** - pybind11 bindings exposing LLVM DWARF types: DWARFContext, DWARFDie, DWARFUnit, DWARFTypePrinter
+- **`src/dwarf2cpp/_dwarf.cpp`** - nanobind bindings exposing LLVM DWARF types: DWARFContext, DWARFDie, DWARFUnit, DWARFTypePrinter (built against the stable ABI / `Py_LIMITED_API` for a single cp312-abi3 wheel)
 - **`src/dwarf2cpp/visitor.py`** - Visitor pattern traversing DWARF DIE tree; ~25 `visit_*` methods for different DWARF tags; converts to Python models
 - **`src/dwarf2cpp/models.py`** - Dataclass-based AST: Namespace, Function, Struct, Class, Union, Enum, TypeDef, Template, etc.
 - **`src/dwarf2cpp/filters.py`** - Jinja2 filters for namespace handling and template rendering
@@ -48,9 +48,9 @@ Binary File → DWARFContext (C++ pybind11) → Visitor (Python) → Models → 
 ## Build System
 
 - **Python build**: conan-py-build (PEP 517 backend driving Conan); recipe in `conanfile.py`
-- **C++ build**: CMake 3.15+
-- **Dependencies**: LLVM 19.1.7, pybind11 3.0.1, libxml2 (via Conan)
-- **Compiler settings**: C++17 required (MSVC 194 / GCC 11 / Apple Clang 13)
+- **C++ build**: CMake 3.26+ (Development.SABIModule for the stable ABI)
+- **Dependencies**: LLVM 22.1.7, nanobind 2.12.0, libxml2 (via Conan)
+- **Compiler settings**: C++17 required; Python 3.12+ (nanobind stable ABI)
 
 ## Code Style
 

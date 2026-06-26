@@ -30,8 +30,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.0
         env:
-          CIBW_SKIP: "*-win32 *-manylinux_i686" # Skip 32-bit builds
-          # Linux wheels build inside a container — mount the host Conan cache in
+          # Build selection and wheel-tag env live in [tool.cibuildwheel] in pyproject.toml.
+          # Linux wheels build inside a container — mount the host Conan cache in.
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.conan2:/root/.conan2"
 
       # The Linux container writes the Conan cache as root; reclaim ownership so

@@ -21,10 +21,11 @@ class Dwarf2cppConan(ConanFile):
     def requirements(self):
         self.requires("llvm-core/22.1.7")
         self.requires("libxml2/[>=2.13 <2.14]")
-        self.requires("pybind11/3.0.1")
+        self.requires("nanobind/2.12.0")
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.15]")
+        # >=3.27 for FindPython's Development.SABIModule (nanobind STABLE_ABI).
+        self.tool_requires("cmake/[>=3.27]")
 
     def build(self):
         cmake = CMake(self)
