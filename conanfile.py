@@ -13,6 +13,8 @@ class Dwarf2cppConan(ConanFile):
         "llvm-core/*:utils": False,
         "llvm-core/*:with_z3": False,
         "llvm-core/*:with_libedit": False,
+        "llvm-core/*:backtraces": False,
+        "llvm-core/*:crash_overrides": False,
     }
 
     def layout(self):
