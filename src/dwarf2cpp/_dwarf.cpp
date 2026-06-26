@@ -1,9 +1,9 @@
-#include "type_printer.h"
-
 #include <llvm/ADT/SmallSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringSwitch.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
+#include <llvm/DebugInfo/DWARF/DWARFDie.h>
+#include <llvm/DebugInfo/DWARF/DWARFTypePrinter.h>
 #include <llvm/DebugInfo/DWARF/DWARFTypeUnit.h>
 #include <llvm/Demangle/Demangle.h>
 #include <pybind11/native_enum.h>
@@ -171,7 +171,7 @@ public:
 private:
     std::string buffer;
     llvm::raw_string_ostream os;
-    llvm::DWARFTypePrinter printer;
+    llvm::DWARFTypePrinter<llvm::DWARFDie> printer;
 };
 
 PYBIND11_MODULE(_dwarf, m) {

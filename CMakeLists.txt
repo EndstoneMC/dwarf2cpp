@@ -9,7 +9,6 @@ find_package(LLVM CONFIG REQUIRED)
 
 Python3_add_library(_dwarf MODULE
         src/dwarf2cpp/_dwarf.cpp
-        src/dwarf2cpp/type_printer.cpp
         WITH_SOABI)
 target_link_libraries(_dwarf PRIVATE pybind11::headers llvm-core::llvm-core)
 if (MSVC)

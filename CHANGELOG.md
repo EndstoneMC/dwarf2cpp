@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Upgraded LLVM to 22.1.7 and replaced the vendored `DWARFTypePrinter` workaround with LLVM's own
+
 ## [0.1.0] - 2026-05-16
 
 ### Added
