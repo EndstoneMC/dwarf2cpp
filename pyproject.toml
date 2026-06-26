@@ -10,7 +10,7 @@ dependencies = ["click", "jinja2", "lazy_loader", "tqdm"]
 dwarf2cpp = "dwarf2cpp.cli:main"
 
 [build-system]
-requires = ["conan-py-build"]
+requires = ["conan-py-build", "cmake>=3.27", "ninja"]
 build-backend = "conan_py_build.build"
 
 [tool.conan-py-build.wheel]
@@ -18,7 +18,10 @@ packages = ["src/dwarf2cpp"]
 exclude = ["*.cpp", "*.h"]
 
 [tool.conan-py-build]
-extra-arguments = ["-s=compiler.cppstd=17"]
+extra-arguments = [
+    "-s=compiler.cppstd=17",
+    "-c=tools.cmake.cmaketoolchain:generator=Ninja",
+]
 
 [tool.cibuildwheel]
 build = "cp312-*"
