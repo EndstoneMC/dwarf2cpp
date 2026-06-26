@@ -22,7 +22,7 @@ extra-arguments = ["-s=compiler.cppstd=17"]
 
 [tool.cibuildwheel]
 build = "cp312-*"
-skip = "*-win32 *-manylinux_i686"
+skip = "*-win32 *-manylinux_i686 *-musllinux*"
 environment = { WHEEL_ABI = "abi3", WHEEL_PYVER = "cp312" }
 
 [tool.ruff]
