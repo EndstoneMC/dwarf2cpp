@@ -46,7 +46,7 @@ This recipe also adds two options not present in the upstream conan-center recip
 so the LLVM build still works with both off.
 
 Because we publish the recipe only, every consumer builds LLVM from source. The
-project's `conanfile.txt` trims that build via options — `targets=X86;AArch64`,
+project's `conanfile.py` trims that build via options — `targets=X86;AArch64`,
 `tools=False`, `utils=False`, `with_z3=False`, `with_libedit=False` — since dwarf2cpp
 only links LLVM libraries to read object files and parse DWARF (no codegen backends,
 command-line tools, test utilities, SMT solver, or line editor needed). zlib/zstd are

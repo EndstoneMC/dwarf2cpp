@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 3.15...4.0)
 
 project(dwarf2cpp LANGUAGES CXX)
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(LLVM CONFIG REQUIRED)
 
-python_add_library(_dwarf MODULE
+Python3_add_library(_dwarf MODULE
         src/dwarf2cpp/_dwarf.cpp
         src/dwarf2cpp/type_printer.cpp
         WITH_SOABI)
