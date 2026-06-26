@@ -133,25 +133,35 @@ NB_MODULE(_dwarf, m) {
         .value("DECLARED_NOT_INLINED", llvm::dwarf::DW_INL_declared_not_inlined)
         .value("DECLARED_INLINED", llvm::dwarf::DW_INL_declared_inlined);
 
-    nb::class_<PyDWARFContext>(m, "DWARFContext")
+    nb::class_<PyDWARFContext>(
+        m, "DWARFContext",
+        "Top-level entity that deals with DWARF debug information parsing.")
         .def(nb::init<const std::string &>(), nb::arg("path"))
         .def_prop_ro("info_section_units",
                      &PyDWARFContext::info_section_units,
-                     nb::rv_policy::reference_internal)
+                     nb::rv_policy::reference_internal,
+                     "Get units from .debug_info in this context.")
         .def_prop_ro("types_section_units",
                      &PyDWARFContext::types_section_units,
-                     nb::rv_policy::reference_internal)
+                     nb::rv_policy::reference_internal,
+                     "Get units from .debug_types in this context.")
         .def_prop_ro("compile_units",
                      &PyDWARFContext::compile_units,
-                     nb::rv_policy::reference_internal)
-        .def_prop_ro("num_compile_units", &PyDWARFContext::getNumCompileUnits)
-        .def_prop_ro("num_type_units", &PyDWARFContext::getNumTypeUnits)
-        .def_prop_ro("num_dwo_compile_units", &PyDWARFContext::getNumDWOCompileUnits)
-        .def_prop_ro("num_dwo_type_units", &PyDWARFContext::getNumDWOTypeUnits)
+                     nb::rv_policy::reference_internal,
+                     "Get compile units in this context.")
+        .def_prop_ro("num_compile_units", &PyDWARFContext::getNumCompileUnits,
+                     "Get the number of compile units in this context.")
+        .def_prop_ro("num_type_units", &PyDWARFContext::getNumTypeUnits,
+                     "Get the number of type units in this context.")
+        .def_prop_ro("num_dwo_compile_units", &PyDWARFContext::getNumDWOCompileUnits,
+                     "Get the number of compile units in the DWO context.")
+        .def_prop_ro("num_dwo_type_units", &PyDWARFContext::getNumDWOTypeUnits,
+                     "Get the number of type units in the DWO context.")
         .def_prop_ro("max_version", &PyDWARFContext::getMaxVersion)
         .def_prop_ro("max_dwo_version", &PyDWARFContext::getMaxDWOVersion)
         .def_prop_ro("is_little_endian", &PyDWARFContext::isLittleEndian)
-        .def_prop_ro("cu_addr_size", &PyDWARFContext::getCUAddrSize);
+        .def_prop_ro("cu_addr_size", &PyDWARFContext::getCUAddrSize,
+                     "Get address size from CUs.");
 
     nb::class_<llvm::DWARFUnit>(m, "DWARFUnit")
         .def_prop_ro("offset", &llvm::DWARFUnit::getOffset)
@@ -166,9 +176,13 @@ NB_MODULE(_dwarf, m) {
                      })
         .def_prop_ro("compilation_dir", &llvm::DWARFUnit::getCompilationDir);
 
-    nb::class_<llvm::DWARFDie>(m, "DWARFDie")
+    nb::class_<llvm::DWARFDie>(
+        m, "DWARFDie",
+        "Utility class that carries the DWARF compile/type unit and the debug "
+        "info entry in an object.")
         .def_prop_ro("unit", &llvm::DWARFDie::getDwarfUnit)
-        .def_prop_ro("offset", &llvm::DWARFDie::getOffset)
+        .def_prop_ro("offset", &llvm::DWARFDie::getOffset,
+                     "Get the absolute offset into the debug info or types section.")
         .def_prop_ro(
             "tag", [](const llvm::DWARFDie &self) { return TagString(self.getTag()).str(); })
         .def_prop_ro("parent",
@@ -177,7 +191,8 @@ NB_MODULE(_dwarf, m) {
                              return parent;
                          }
                          return std::nullopt;
-                     })
+                     },
+                     "Get the parent of this DIE object, or None if it has no parent.")
         .def_prop_ro("short_name",
                      [](const llvm::DWARFDie &self) {
                          return llvm::dwarf::toString(
@@ -210,7 +225,8 @@ NB_MODULE(_dwarf, m) {
                              attrs.emplace_back(attr);
                          }
                          return attrs;
-                     })
+                     },
+                     "Get all attributes in the current DIE only.")
         .def_prop_ro("children",
                      [](const llvm::DWARFDie &self) {
                          std::vector<llvm::DWARFDie> children;
@@ -228,11 +244,19 @@ NB_MODULE(_dwarf, m) {
                  self.dump(os);
                  os.flush();
                  return result;
-             })
+             },
+             "Dump the DIE and all of its attributes.")
         .def("find",
              [](const llvm::DWARFDie &self, const std::string &attribute) {
                  return self.find(ToAttribute(attribute));
-             })
+             },
+             R"doc(Extract the specified attribute from this DIE.
+
+Extracts the attribute value from this DIE only; it does not look for the value
+in any DW_AT_specification or DW_AT_abstract_origin referenced DIEs.
+
+Returns:
+    The form value if the attribute was successfully extracted, otherwise None.)doc")
         .def("resolve_type_unit_reference",
              [](const llvm::DWARFDie &self) -> std::optional<llvm::DWARFDie> {
                  auto die = self.resolveTypeUnitReference();
@@ -244,12 +268,18 @@ NB_MODULE(_dwarf, m) {
         .def("__hash__", &llvm::DWARFDie::getOffset)
         .def(nb::self == nb::self);
 
-    nb::class_<llvm::DWARFAttribute>(m, "DWARFAttribute")
-        .def_ro("offset", &llvm::DWARFAttribute::Offset)
-        .def_ro("byte_size", &llvm::DWARFAttribute::ByteSize)
+    nb::class_<llvm::DWARFAttribute>(
+        m, "DWARFAttribute",
+        "Encapsulates a DWARF attribute value and all of the data required to "
+        "describe the attribute value.")
+        .def_ro("offset", &llvm::DWARFAttribute::Offset,
+                "The debug info/types offset for this attribute.")
+        .def_ro("byte_size", &llvm::DWARFAttribute::ByteSize,
+                "The debug info/types section byte size of the data for this attribute.")
         .def_prop_ro("name",
                      [](const llvm::DWARFAttribute &self) { return ToString(self.Attr); })
-        .def_ro("value", &llvm::DWARFAttribute::Value);
+        .def_ro("value", &llvm::DWARFAttribute::Value,
+                "The form and value for this attribute.");
 
     nb::class_<llvm::DWARFFormValue>(m, "DWARFFormValue")
         .def_prop_ro("form",
@@ -258,22 +288,11 @@ NB_MODULE(_dwarf, m) {
                      })
         .def("as_referenced_die",
              [](const llvm::DWARFFormValue &self) -> std::optional<llvm::DWARFDie> {
-                 llvm::DWARFDie result;
-                 auto &V = self;
-                 auto *U = self.getUnit();
-                 if (std::optional<uint64_t> offset = V.getAsRelativeReference()) {
-                     result = const_cast<llvm::DWARFUnit *>(V.getUnit())
-                                  ->getDIEForOffset(V.getUnit()->getOffset() + offset.value());
-                 } else if (offset = V.getAsDebugInfoReference(); offset) {
-                     if (llvm::DWARFUnit *spec_unit
-                         = U->getUnitVector().getUnitForOffset(offset.value()))
-                         result = spec_unit->getDIEForOffset(*offset);
-                 } else if (std::optional<uint64_t> sig = V.getAsSignatureReference()) {
-                     if (llvm::DWARFTypeUnit *TU = U->getContext().getTypeUnitForHash(
-                             sig.value(), U->isDWOUnit()))
-                         result = TU->getDIEForOffset(TU->getTypeOffset() + TU->getOffset());
-                 }
-
+                 // getAttributeValueAsReferencedDie resolves using the form value's unit,
+                 // so any DIE of that unit (here the unit DIE) yields the same result.
+                 llvm::DWARFDie result = const_cast<llvm::DWARFUnit *>(self.getUnit())
+                                             ->getUnitDIE()
+                                             .getAttributeValueAsReferencedDie(self);
                  if (result.isValid()) {
                      return result;
                  }
@@ -302,7 +321,8 @@ NB_MODULE(_dwarf, m) {
         .def(nb::init())
         .def("append_qualified_name", &PyDWARFTypePrinter::appendQualifiedName)
         .def("append_qualified_name_before", &PyDWARFTypePrinter::appendQualifiedNameBefore)
-        .def("append_unqualified_name", &PyDWARFTypePrinter::appendUnqualifiedName)
+        .def("append_unqualified_name", &PyDWARFTypePrinter::appendUnqualifiedName,
+             "Recursively append the DIE type name when applicable.")
         .def("append_unqualified_name_before", &PyDWARFTypePrinter::appendUnqualifiedNameBefore)
         .def("append_unqualified_name_after", &PyDWARFTypePrinter::appendUnqualifiedNameAfter)
         .def("append_scopes", &PyDWARFTypePrinter::appendScopes)
