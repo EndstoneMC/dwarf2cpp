@@ -3,8 +3,13 @@ name: Build
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   build_wheels:
@@ -22,25 +27,83 @@ jobs:
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
-          key: conan-${{ matrix.os }}-${{ hashFiles('conanfile.py') }}
+          path: .conan2/p
+          key: conan-${{ matrix.os }}-${{ hashFiles('conanfile.py', 'pyproject.toml') }}
           restore-keys: |
             conan-${{ matrix.os }}-
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.0
         env:
-          # Build selection and wheel-tag env live in [tool.cibuildwheel] in pyproject.toml.
-          # Linux wheels build inside a container — mount the host Conan cache in.
-          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.conan2:/root/.conan2"
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume ${{ github.workspace }}/.conan2:/project/.conan2"
 
-      # The Linux container writes the Conan cache as root; reclaim ownership so
-      # the actions/cache post-step (running as the runner user) can save it.
-      - name: Reclaim Conan cache ownership
+      - name: Reclaim Conan home ownership
         if: always() && runner.os == 'Linux'
-        run: sudo chown -R "$(id -u):$(id -g)" ~/.conan2
+        run: sudo chown -R "$(id -u):$(id -g)" .conan2
 
       - uses: actions/upload-artifact@v7
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: dist-${{ matrix.os }}
           path: ./wheelhouse/*.whl
+
+  make_sdist:
+    name: Build sdist
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-sdist
+          path: dist/*.tar.gz
+
+  publish:
+    name: Publish
+    if: startsWith(github.ref, 'refs/tags/') && github.repository == 'EndstoneMC/dwarf2cpp'
+    needs: [ build_wheels, make_sdist ]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download distributions
+        uses: actions/download-artifact@v7
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+
+      - name: Extract release notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          BODY=$(sed -n "/^## \[$VERSION\]/,/^## \[/{/^## \[/d; p}" CHANGELOG.md)
+          BODY=$(echo "$BODY" | sed '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba}')
+          if [ -z "$BODY" ]; then
+            echo "::error::No [$VERSION] section found in CHANGELOG.md"
+            exit 1
+          fi
+          printf '%s\n' "$BODY" > /tmp/release_body.md
+          PREV_TAG=$(git tag --sort=-v:refname | sed -n '2p')
+          if [ -n "$PREV_TAG" ]; then
+            printf '\n**Full Changelog**: https://github.com/%s/compare/%s...%s\n' \
+              "${{ github.repository }}" "$PREV_TAG" "$GITHUB_REF_NAME" >> /tmp/release_body.md
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file /tmp/release_body.md dist/*

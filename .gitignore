@@ -20,7 +20,8 @@ wheelhouse/
 .idea/
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/skills/
 
 # CMake Files
 CMakeUserPresets.json
