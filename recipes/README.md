@@ -14,10 +14,10 @@ Differences from the upstream recipe:
   the split per-component source tarballs** (`llvm-*.src.tar.xz` /
   `cmake-*.src.tar.xz`); only the full `llvm-project-*.src.tar.xz` monorepo is
   released.
-- `source()` gained a branch that fetches the monorepo and renames its `llvm/`
-  subdirectory to `llvm-main/` so the rest of the recipe (which already expects
-  that layout for LLVM >= 18) works unchanged. The `cmake/` module directory is
-  already present as a sibling inside the monorepo.
+- `source()` fetches the monorepo and the build points straight at its `llvm/`
+  subdirectory (`build_script_folder` / `_llvm_source_folder_path` / patch
+  `base_path`); the `cmake/` module directory is already present as a sibling
+  inside the monorepo.
 - `patches/22x/0000-cmake-dependencies.patch` is the `19x` cmake-dependencies
   patch re-cut against the 22.1.7 sources (line offsets only; content identical).
 

@@ -264,10 +264,9 @@ class LLVMCoreConan(ConanFile):
 
     def source(self):
         # LLVM >=22 no longer ships the per-component source tarballs (llvm-*/cmake-*),
-        # only the full monorepo. It already contains llvm/ and cmake/ as siblings, so we
-        # just rename llvm/ to llvm-main/ for the build/package paths below.
+        # only the full monorepo, which already contains llvm/ and cmake/ as siblings.
+        # The build points straight at the llvm/ subfolder (see _llvm_source_folder_path).
         get(self, **self.conan_data["sources"][self.version]["llvm-project"], strip_root=True)
-        rename(self, os.path.join(self.source_folder, "llvm"), os.path.join(self.source_folder, "llvm-main"))
 
     def _apply_resource_limits(self, cmake_definitions):
         # LLVM links are memory-hungry; let constrained machines cap parallel job RAM via
@@ -404,7 +403,7 @@ class LLVMCoreConan(ConanFile):
             set(GRAPHVIZ_IGNORE_TARGETS "{";".join(exclude_patterns)}")
         """)
         save(self, PurePosixPath(self.build_folder) / "CMakeGraphVizOptions.cmake", graphviz_options)
-        cmake.configure(build_script_folder="llvm-main", cli_args=graphviz_args)
+        cmake.configure(build_script_folder="llvm", cli_args=graphviz_args)
         cmake.build()
 
     @property
@@ -413,7 +412,7 @@ class LLVMCoreConan(ConanFile):
 
     @property
     def _llvm_source_folder_path(self):
-        return PurePosixPath(self.source_folder) / "llvm-main"
+        return PurePosixPath(self.source_folder) / "llvm"
 
     def _llvm_build_info(self):
         cmake_config = Path(self._package_folder_path / "lib" / "cmake" / "llvm" / "LLVMConfig.cmake").read_text(
