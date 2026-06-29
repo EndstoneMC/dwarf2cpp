@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Cache Conan packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .conan2/p
           key: conan-${{ matrix.os }}-${{ hashFiles('conanfile.py', 'pyproject.toml') }}
