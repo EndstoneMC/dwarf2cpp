@@ -752,14 +752,15 @@ class Visitor:
             self.visit(child)
 
     def _add(self, filepath: str, lineno: int, obj: Object) -> None:
-        file = self._files[filepath]
-        lines = file[lineno]
+        lines = self._files[filepath][lineno]
 
-        if len(lines) >= 8:
-            # too many items on a single line (template instantiations?)
+        if len(lines) < 8:
+            lines.append(obj)
             return
 
-        lines.append(obj)
+        for existing in lines:
+            if existing.merge(obj):
+                return
 
     def _register_template(self, key: str | int, lineno: int, template: Template) -> Template | None:
         if not template.declaration:

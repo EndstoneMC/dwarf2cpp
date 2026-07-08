@@ -194,12 +194,13 @@ class TypeDef(Object):
         if self.kind != other.kind or self.name != other.name or type(self.value) is not type(other.value):
             return False
 
-        if isinstance(self.value, str):
+        if self.value is None:
+            pass
+        elif isinstance(self.value, str):
             if self.value != other.value:
                 return False
-        else:
-            if not self.value.merge(other.value):
-                return False
+        elif not self.value.merge(other.value):
+            return False
 
         self.alignment = self.alignment or other.alignment
         return True
