@@ -33,7 +33,7 @@ jobs:
             conan-${{ matrix.os }}-
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v4.1.0
+        uses: pypa/cibuildwheel@v4.1.1
         env:
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume ${{ github.workspace }}/.conan2:/project/.conan2"
 
